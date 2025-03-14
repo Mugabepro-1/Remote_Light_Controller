@@ -3,7 +3,7 @@ import time
 
 broker_address = "157.173.101.159"
 broker_port = 1883
-topic = "/mugabe/light_control"
+topic = "/student_group/light_control"
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
@@ -18,9 +18,9 @@ def on_message(client, userdata, msg):
     message = msg.payload.decode()
     print(f"Received message on topic {msg.topic}: {message}")
     if message == "ON":
-        print("Light is TURNED ON")
+        print("💡 Light is TURNED ON")
     elif message == "OFF":
-        print("Light is TURNED OFF")
+        print("💡 Light is TURNED OFF")
     else:
         print(f"Unknown command received: {message}")
 

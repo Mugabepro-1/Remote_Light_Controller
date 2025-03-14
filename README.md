@@ -9,7 +9,7 @@ In this system for the client side content (html file) is for the publisher.
 1) connectes to the mqtt broker 
 2) publishes data through websockets.
 
-For the server side content (python file) is for the subscriber.
+For the server side (python file) is for the subscriber (sumulated IOT device)
 1) It connectsto the broker
 2) Subscribes to the publisher's topic
 3) Starts lamp simulation and receiving data published by the publisher.
