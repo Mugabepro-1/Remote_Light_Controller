@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQTT Light Control</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: #a1a1fe;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            flex: 1;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #offButton {
+            background-color: #dc3545;
+        }
+
+        #offButton:hover {
+            background-color: #a71d2a;
+        }
+
+        .status {
+            font-size: 1.2rem;
+            margin-top: 1rem;
+        }
+
+        .status span {
+            font-weight: bold;
+            color: #28a745; /* Green for ON */
+        }
+
+        .status.off span {
+            color: #dc3545; /* Red for OFF */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MQTT Light Control</h1>
+        <div class="buttons">
+            <button id="onButton">Turn ON</button>
+            <button id="offButton">Turn OFF</button>
+        </div>
+        <p class="status" id="status">Status: <span>No command sent yet</span></p>
+    </div>
+
+    <!-- Import MQTT.js from CDN -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+    <script>
+        const statusElement = document.getElementById("status");
+
+        const broker = "157.173.101.159";
+        const port = 9001;
+        const topic = "/mugabe/light_control";
+
+        const clientId = `mqttjs_${Math.random().toString(16).substring(2, 8)}`;
+
+        const wsURL = `ws://${broker}:${port}/mqtt`;
+
+        console.log(`Connecting to ${wsURL}`);
+
+        const mqttClient = mqtt.connect(wsURL, {
+            clientId: clientId,
+            clean: true,
+            connectTimeout: 4000,
+            reconnectPeriod: 1000
+        });
+
+        mqttClient.on('connect', function() {
+            console.log('Connected to MQTT broker');
+            statusElement.innerHTML = "Status: <span>Connected to broker</span>";
+
+            // Subscribe to the topic
+            mqttClient.subscribe(topic, function(err) {
+                if (err) {
+                    console.error('Error subscribing to topic:', err);
+                } else {
+                    console.log(`Subscribed to ${topic}`);
+                }
+            });
+        });
+
+        mqttClient.on('error', function(err) {
+            console.error('Connection error:', err);
+            statusElement.innerHTML = "Status: <span>Connection failed</span>";
+            statusElement.classList.add("off");
+        });
+
+        mqttClient.on('message', function(topic, message) {
+            const msg = message.toString();
+            console.log(`Received message: ${msg}`);
+            statusElement.innerHTML = `Status: <span>${msg}</span>`;
+            statusElement.classList.toggle("off", msg === "OFF");
+        });
+
+        function publishMessage(message) {
+            console.log(`Publishing message: ${message}`);
+            mqttClient.publish(topic, message, { qos: 0, retain: false }, function(err) {
+                if (err) {
+                    console.error('Error publishing:', err);
+                } else {
+                    console.log('Message published');
+                    statusElement.innerHTML = `Status: <span>${message}</span>`;
+                    statusElement.classList.toggle("off", message === "OFF");
+                }
+            });
+        }
+
+        document.getElementById("onButton").addEventListener("click", function() {
+            publishMessage("ON");
+        });
+
+        document.getElementById("offButton").addEventListener("click", function() {
+            publishMessage("OFF");
+        });
+    </script>
+</body>
+</html>
